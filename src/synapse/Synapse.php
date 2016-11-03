@@ -239,7 +239,7 @@ class Synapse{
 				$class = $ev->getPlayerClass();
 				
 				/** @var Player $player */
-				$player = new $class($this, $ev->getClientId(), $ev->getAddress(), $ev->getPort());
+				$player = new $class($this->synLibInterface, $ev->getClientId(), $ev->getAddress(), $ev->getPort());
 				$player->setUniqueId($pk->uuid);
 				$this->server->addPlayer(spl_object_hash($player), $player);
 				$this->players[$pk->uuid->toBinary()] = $player;
