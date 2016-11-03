@@ -324,4 +324,8 @@ class Player extends PMPlayer{
 	public function isFirstLogin(){
 		return $this->isFirstTimeLogin;
 	}
+	
+	public function getSynapse() : Synapse {
+		return $this->synapse;
+	}
 }
