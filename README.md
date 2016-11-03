@@ -1,6 +1,9 @@
 # SynapsePM
 Synapse client for PocketMine like server software. Supports multiple connections.
 
+# SPP
+Synapse Proxy Version: `7`
+
 # Config
  - `enabled` - if false, plugin and all other options will be disabled;
  - `disable-rak`  - if true, disables server`s raknet and players will not able to join to server not thought proxy;
