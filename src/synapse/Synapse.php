@@ -21,6 +21,7 @@
 
 namespace synapse;
 
+use pocketmine\event\player\PlayerCreationEvent;
 use pocketmine\Server;
 use pocketmine\utils\MainLogger;
 use pocketmine\utils\Utils;
@@ -233,7 +234,12 @@ class Synapse{
 				break;
 			case Info::PLAYER_LOGIN_PACKET:
 				/** @var PlayerLoginPacket $pk */
-				$player = new Player($this->synLibInterface, mt_rand(0, PHP_INT_MAX), $pk->address, $pk->port);
+				$ev = new PlayerCreationEvent($this->synLibInterface, Player::class, Player::class, null, $pk->address, $pk->port);
+				$this->server->getPluginManager()->callEvent($ev);
+				$class = $ev->getPlayerClass();
+				
+				/** @var Player $player */
+				$player = new $class($this, $ev->getClientId(), $ev->getAddress(), $ev->getPort());
 				$player->setUniqueId($pk->uuid);
 				$this->server->addPlayer(spl_object_hash($player), $player);
 				$this->players[$pk->uuid->toBinary()] = $player;
