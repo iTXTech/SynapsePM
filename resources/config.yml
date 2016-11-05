@@ -7,3 +7,4 @@ synapses:
    is-main-server: true
    server-password: 32bitlongkey
    description: "A Synapse client"
+loadingScreen: true

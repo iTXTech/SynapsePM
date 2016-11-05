@@ -37,6 +37,7 @@ use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\protocol\ChangeDimensionPacket;
 use pocketmine\network\protocol\ContainerSetContentPacket;
 use pocketmine\network\protocol\DataPacket;
+use pocketmine\network\protocol\FullChunkDataPacket;
 use pocketmine\network\protocol\PlayerListPacket;
 use pocketmine\network\protocol\PlayStatusPacket;
 use pocketmine\network\protocol\ResourcePacksInfoPacket;
@@ -58,6 +59,8 @@ use synapse\network\protocol\spp\PlayerLoginPacket;
 use synapse\network\protocol\spp\TransferPacket;
 use synapse\network\protocol\spp\FastPlayerListPacket;
 use synapse\network\SynLibInterface;
+use synapse\task\TransferTask;
+use synapsepm\SynapsePM;
 
 
 class Player extends PMPlayer{
@@ -207,6 +210,15 @@ class Player extends PMPlayer{
 			$pk->worldName = $this->server->getMotd();
 			$this->dataPacket($pk);
 			
+			if (SynapsePM::isUseLoadingScreen()){
+				$pk = new ChangeDimensionPacket();
+				$pk->dimension = $this->getLevel()->getDimension();
+				$pk->x = $this->getX();
+				$pk->y = $this->getY();
+				$pk->z = $this->getZ();
+				$this->dataPacket($pk);
+			}
+			
 			$pk = new SetTimePacket();
 			$pk->time = $this->level->getTime();
 			$pk->started = $this->level->stopTime == false;
@@ -247,7 +259,18 @@ class Player extends PMPlayer{
 			$this->forceMovement = $this->teleportPosition = $this->getPosition();
 		}
 	}
-
+	
+	public function doFirstSpawn()
+	{
+		if ($this->isFirstTimeLogin){
+			$pk = new PlayStatusPacket();
+			$pk->status = PlayStatusPacket::PLAYER_SPAWN;
+			$this->dataPacket($pk);
+		}
+		
+		parent::doFirstSpawn();
+	}
+	
 	public function transfer(string $hash){
 		$clients = $this->synapse->getClientData();
 		if(isset($clients[$hash])){
@@ -256,16 +279,38 @@ class Player extends PMPlayer{
 					$entity->despawnFrom($this);
 				}
 			}
-			$pk = new TransferPacket();
-			$pk->uuid = $this->uuid;
-			$pk->clientHash = $hash;
-			$this->synapse->sendDataPacket($pk);
-
-			/*$ip = $clients[$hash]["ip"];
-			$port = $clients[$hash]["port"];
-
-			$this->close("", "Transferred to $ip:$port");
-			Synapse::getInstance()->removePlayer($this);*/
+			
+			if (SynapsePM::isUseLoadingScreen()){
+				$pk = new ChangeDimensionPacket();
+				$pk->dimension = $this->getLevel()->getDimension() === Level::DIMENSION_NORMAL ? ChangeDimensionPacket::DIMENSION_NETHER : ChangeDimensionPacket::DIMENSION_NORMAL;
+				$pk->x = $this->getX();
+				$pk->y = $this->getY();
+				$pk->z = $this->getZ();
+				$this->dataPacket($pk);
+				
+				$pk = new PlayStatusPacket();
+				$pk->status = PlayStatusPacket::PLAYER_SPAWN;
+				$this->dataPacket($pk);
+				$this->forceSendEmptyChunks();
+				$this->getServer()->getScheduler()->scheduleDelayedTask(new TransferTask($this, $hash), 1);
+			}else{
+				(new TransferTask($this, $hash))->onRun(0);
+			}
+		}
+	}
+	
+	protected function forceSendEmptyChunks(){
+		$chunkX = $this->getX() >> 4;
+		$chunkZ = $this->getZ() >> 4;
+		
+		for ($x = -3; $x < 3; ++$x){
+			for ($z = -3; $z < 3; ++$z){
+				$pk = new FullChunkDataPacket();
+				$pk->chunkX = $chunkX + $x;
+				$pk->chunkZ = $chunkZ + $z;
+				$pk->data = '';
+				$this->dataPacket($pk);
+			}
 		}
 	}
 

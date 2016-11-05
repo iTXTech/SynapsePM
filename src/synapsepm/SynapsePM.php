@@ -15,6 +15,9 @@ class SynapsePM extends PluginBase
 	/** @var TaskHandler|null */
 	private $tickTask = null;
 	
+	/** @var bool */
+	private static $useLoadingScreen;
+	
 	
 	public function onEnable()
 	{
@@ -76,6 +79,8 @@ class SynapsePM extends PluginBase
 			}
 		}
 		
+		self::$useLoadingScreen = (bool)$this->getConfig()->get('loadingScreen', true);
+		
 		$this->tickTask = $this->getServer()->getScheduler()->scheduleRepeatingTask(new TickSynapseTask($this), 1);
 	}
 	
@@ -110,5 +115,13 @@ class SynapsePM extends PluginBase
 	public function getSynapses() : array
 	{
 		return $this->synapses;
+	}
+	
+	/**
+	 * @return boolean
+	 */
+	public static function isUseLoadingScreen() : bool
+	{
+		return self::$useLoadingScreen;
 	}
 }
