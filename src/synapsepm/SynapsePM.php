@@ -18,6 +18,34 @@ class SynapsePM extends PluginBase
 	
 	public function onEnable()
 	{
+		$useOldGenisysConfig = false;
+		
+		if (defined('pocketmine\\GENISYS_API_VERSION'))
+	    {
+	        $configVersion = $this->getServer()->getAdvancedProperty('config.version', 0);
+		    
+		    if (($configVersion >= 14) && ($configVersion < 22))
+		    {
+		    	$useOldGenisysConfig = true;
+		    }
+	    }
+		
+		if ($useOldGenisysConfig)
+		{
+			$this->getConfig()->set('enabled', $this->getServer()->getAdvancedProperty('synapse.enabled', false));
+			$this->getConfig()->set('disable-rak', $this->getServer()->getAdvancedProperty('synapse.disable-rak', false));
+			$this->getConfig()->set('synapses', [[
+				'enabled' => $this->getServer()->getAdvancedProperty('synapse.enabled', false),
+				'server-ip' => $this->getServer()->getAdvancedProperty('synapse.server-ip', '127.0.0.1'),
+				'server-port' => $this->getServer()->getAdvancedProperty('synapse.server-port', 10305),
+				'is-main-server' => $this->getServer()->getAdvancedProperty('synapse.is-main-server', true),
+				'server-password' => $this->getServer()->getAdvancedProperty('synapse.server-password', '123456'),
+				'description' => $this->getServer()->getAdvancedProperty('synapse.description', 'A Synapse client')
+			]]);
+			
+			$this->getLogger()->warning('Using old config. Please, update your Genisys and Genisys config.');
+		}
+	
 		$this->saveDefaultConfig();
 		$this->reloadConfig();
 		
