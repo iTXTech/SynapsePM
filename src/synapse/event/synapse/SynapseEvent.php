@@ -18,30 +18,16 @@
  * @link https://itxtech.org
  *
  */
- 
-namespace synapse\network\protocol\spp;
 
-class InformationPacket extends DataPacket{
-	const NETWORK_ID = Info::INFORMATION_PACKET;
+namespace synapse\event\synapse;
 
-	const TYPE_LOGIN = 0;
-	const TYPE_CLIENT_DATA = 1;
-	const TYPE_PLUGIN_MESSAGE = 2;
+use synapse\event\Event;
 
-	const INFO_LOGIN_SUCCESS = "success";
-	const INFO_LOGIN_FAILED = "failed";
+abstract class SynapseEvent extends Event{
+    /** @var \synapse\Synapse */
+    protected $synapse;
 
-	public $type;
-	public $message;
-
-	public function encode(){
-		$this->reset();
-		$this->putByte($this->type);
-		$this->putString($this->message);
-	}
-
-	public function decode(){
-		$this->type = $this->getByte();
-		$this->message = $this->getString();
-	}
+    public function getSynapse(){
+        return $this->synapse;
+    }
 }

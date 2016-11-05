@@ -25,6 +25,7 @@ use pocketmine\event\player\PlayerCreationEvent;
 use pocketmine\Server;
 use pocketmine\utils\MainLogger;
 use pocketmine\utils\Utils;
+use synapse\event\synapse\SynapsePluginMsgRecvEvent;
 use synapse\network\protocol\spp\BroadcastPacket;
 use synapse\network\protocol\spp\ConnectPacket;
 use synapse\network\protocol\spp\DataPacket;
@@ -230,6 +231,9 @@ class Synapse{
 						$this->clientData = json_decode($pk->message, true)["clientList"];
 						$this->lastRecvInfo = microtime();
 						break;
+                    case InformationPacket::TYPE_PLUGIN_MESSAGE:
+                        $this->server->getPluginManager()->callEvent(new SynapsePluginMsgRecvEvent($this, $pk->message));
+                        break;
 				}
 				break;
 			case Info::PLAYER_LOGIN_PACKET:
@@ -264,4 +268,12 @@ class Synapse{
 				break;
 		}
 	}
+
+	public function sendPluginMessage(string $message)
+    {
+        $pk = new InformationPacket();
+        $pk->type = InformationPacket::TYPE_PLUGIN_MESSAGE;
+        $pk->message = $message;
+        $this->sendDataPacket($pk);
+    }
 }
