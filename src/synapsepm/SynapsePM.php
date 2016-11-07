@@ -21,6 +21,9 @@ class SynapsePM extends PluginBase
 	
 	public function onEnable()
 	{
+		$this->saveDefaultConfig();
+		$this->reloadConfig();
+
 		$useOldGenisysConfig = false;
 		
 		if (defined('pocketmine\\GENISYS_API_VERSION'))
@@ -32,7 +35,7 @@ class SynapsePM extends PluginBase
 		    	$useOldGenisysConfig = true;
 		    }
 	    }
-		
+
 		if ($useOldGenisysConfig)
 		{
 			$this->getConfig()->set('enabled', $this->getServer()->getAdvancedProperty('synapse.enabled', false));
@@ -48,10 +51,7 @@ class SynapsePM extends PluginBase
 			
 			$this->getLogger()->warning('Using old config. Please, update your Genisys and Genisys config.');
 		}
-	
-		$this->saveDefaultConfig();
-		$this->reloadConfig();
-		
+
 		if (!$this->getConfig()->get('enabled'))
 		{
 			$this->setEnabled(false);
@@ -70,7 +70,7 @@ class SynapsePM extends PluginBase
 				}
 			}
 		}
-		
+
 		foreach ($this->getConfig()->get('synapses') as $synapseConfig)
 		{
 			if ($synapseConfig['enabled'])
@@ -78,9 +78,9 @@ class SynapsePM extends PluginBase
 				$this->synapses []= new Synapse($this->getServer(), $synapseConfig);
 			}
 		}
-		
+
 		self::$useLoadingScreen = (bool)$this->getConfig()->get('loadingScreen', true);
-		
+
 		$this->tickTask = $this->getServer()->getScheduler()->scheduleRepeatingTask(new TickSynapseTask($this), 1);
 	}
 	
