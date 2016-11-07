@@ -100,6 +100,15 @@ class SynapsePM extends PluginBase
 	}
 	
 	/**
+	 * Adds synapse to synapses list
+	 * @param Synapse $synapse
+	 */
+	public function addSynapse(Synapse $synapse)
+	{
+		$this->synapses []= $synapse;
+	}
+	
+	/**
 	 * Returns first enabled synapse
 	 * @return Synapse|null
 	 */
