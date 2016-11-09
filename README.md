@@ -1,6 +1,9 @@
 # SynapsePM
 Synapse client for PocketMine like server software. Supports multiple connections.
 
+## Warning
+Please, don't use loading screen, because it works so bad sometimes.
+
 # SPP
 Synapse Proxy Version: `7`
 
