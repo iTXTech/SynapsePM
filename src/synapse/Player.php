@@ -282,7 +282,7 @@ class Player extends PMPlayer{
 			
 			if (SynapsePM::isUseLoadingScreen()){
 				$pk = new ChangeDimensionPacket();
-				$pk->dimension = $this->getLevel()->getDimension() === Level::DIMENSION_NORMAL ? ChangeDimensionPacket::DIMENSION_NETHER : ChangeDimensionPacket::DIMENSION_NORMAL;
+				$pk->dimension = $this->getLevel()->getDimension() === Level::DIMENSION_NORMAL ? ChangeDimensionPacket::DIMENSION_NORMAL : ChangeDimensionPacket::DIMENSION_NORMAL;
 				$pk->x = $this->getX();
 				$pk->y = $this->getY();
 				$pk->z = $this->getZ();
