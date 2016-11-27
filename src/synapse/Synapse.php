@@ -67,6 +67,7 @@ class Synapse{
 		]
 	 */
 	private $description;
+	private $verboseLogging;
 	private $connectionTime = PHP_INT_MAX;
 
 	public function __construct(Server $server, array $config){
@@ -76,6 +77,7 @@ class Synapse{
 		$this->isMainServer = $config["is-main-server"] ?? true;
 		$this->password = $config["server-password"];
 		$this->description = $config["description"];
+		$this->verboseLogging = $config["verbose-logging"] ?? false;
 		$this->logger = $server->getLogger();
 		$this->interface = new SynapseInterface($this, $this->serverIp, $this->port);
 		$this->synLibInterface = new SynLibInterface($this, $this->interface);
@@ -201,7 +203,7 @@ class Synapse{
 	}
 
 	public function handleDataPacket(DataPacket $pk){
-		$this->logger->debug("Received packet " . $pk::NETWORK_ID . " from {$this->serverIp}:{$this->port}");
+		if ($this->verboseLogging) $this->logger->debug("Received packet " . $pk::NETWORK_ID . " from {$this->serverIp}:{$this->port}");
 		switch($pk::NETWORK_ID){
 			case Info::DISCONNECT_PACKET:
 				/** @var DisconnectPacket $pk */
