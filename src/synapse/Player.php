@@ -90,7 +90,7 @@ class Player extends PMPlayer{
 				$this->close($this->getLeaveMessage(), "Server is white-listed");
 
 				return;
-			}elseif($this->server->getNameBans()->isBanned(strtolower($this->getName())) or $this->server->getIPBans()->isBanned($this->getAddress()) or $this->server->getName() == "Genisys" && $this->server->getCIDBans()->isBanned($this->randomClientId)){
+			}elseif($this->server->getNameBans()->isBanned(strtolower($this->getName())) or $this->server->getIPBans()->isBanned($this->getAddress()) or $this->server->getName() != "PocketMine-MP" && $this->server->getCIDBans()->isBanned($this->randomClientId)){
 				$this->close($this->getLeaveMessage(), TextFormat::RED . "You are banned");
 
 				return;
@@ -194,7 +194,7 @@ class Player extends PMPlayer{
 			$pk->y = $this->y;
 			$pk->z = $this->z;
 			$pk->seed = -1;
-			if($this->server->getName() == "Genisys"){
+			if($this->server->getName() != "PocketMine-MP"){
 				$pk->dimension = $this->level->getDimension();
 			}
 			$pk->gamemode = $this->gamemode & 0x01;
@@ -213,7 +213,7 @@ class Player extends PMPlayer{
 			$this->dataPacket($pk);
 			
 			if (SynapsePM::isUseLoadingScreen()){
-				if($this->server->getName() == "Genisys"){
+				if($this->server->getName() != "PocketMine-MP"){
 					$pk = new ChangeDimensionPacket();
 					$pk->dimension = $this->getLevel()->getDimension();
 					$pk->x = $this->getX();
@@ -253,7 +253,7 @@ class Player extends PMPlayer{
 			}else{
 				$pk = new ContainerSetContentPacket();
 				$pk->windowid = ContainerSetContentPacket::SPECIAL_CREATIVE;
-				$pk->slots = $this->server->getName() == "Genisys" ? array_merge(Item::getCreativeItems(), $this->personalCreativeItems) : Item::getCreativeItems();
+				$pk->slots = $this->server->getName() != "PocketMine-MP" ? array_merge(Item::getCreativeItems(), $this->personalCreativeItems) : Item::getCreativeItems();
 				$this->dataPacket($pk);
 			}
 
@@ -287,12 +287,16 @@ class Player extends PMPlayer{
 			}
 			
 			if (SynapsePM::isUseLoadingScreen()){
-				$pk = new ChangeDimensionPacket();
-				$pk->dimension = $this->getLevel()->getDimension() === Level::DIMENSION_NORMAL ? ChangeDimensionPacket::DIMENSION_NETHER : ChangeDimensionPacket::DIMENSION_NORMAL;
-				$pk->x = $this->getX();
-				$pk->y = $this->getY();
-				$pk->z = $this->getZ();
-				$this->dataPacket($pk);
+				if($this->server->getName() != "PocketMine-MP"){
+					$pk = new ChangeDimensionPacket();
+					$pk->dimension = $this->getLevel()->getDimension() === Level::DIMENSION_NORMAL ? ChangeDimensionPacket::DIMENSION_NETHER : ChangeDimensionPacket::DIMENSION_NORMAL;
+					$pk->x = $this->getX();
+					$pk->y = $this->getY();
+					$pk->z = $this->getZ();
+					$this->dataPacket($pk);
+				} else {
+					$this->server->getLogger()->info(TextFormat::RED. "PocketMine-MP does not support the loading screen feature, please disable it in your config to prevent this message from appearing in the future");
+				}
 				
 				$pk = new PlayStatusPacket();
 				$pk->status = PlayStatusPacket::PLAYER_SPAWN;
