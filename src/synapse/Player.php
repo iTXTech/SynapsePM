@@ -90,7 +90,7 @@ class Player extends PMPlayer{
 				$this->close($this->getLeaveMessage(), "Server is white-listed");
 
 				return;
-			}elseif($this->server->getNameBans()->isBanned(strtolower($this->getName())) or $this->server->getIPBans()->isBanned($this->getAddress()) or $this->server->getCIDBans()->isBanned($this->randomClientId)){
+			}elseif($this->server->getNameBans()->isBanned(strtolower($this->getName())) or $this->server->getIPBans()->isBanned($this->getAddress()) or $this->server->getName() != "PocketMine-MP" && $this->server->getCIDBans()->isBanned($this->randomClientId)){
 				$this->close($this->getLeaveMessage(), TextFormat::RED . "You are banned");
 
 				return;
@@ -130,7 +130,7 @@ class Player extends PMPlayer{
 				$nbt->MaxHealth = new ShortTag("MaxHealth", 20);
 			}
 			$this->food = $nbt["Hunger"];
-			$this->setMaxHealth($nbt["MaxHealth"]);
+			Entity::setMaxHealth($nbt["MaxHealth"]);
 			Entity::setHealth(($nbt["Health"] <= 0) ? 20 : $nbt["Health"]);
 
 			$this->gamemode = $nbt["playerGameType"] & 0x03;
@@ -182,7 +182,7 @@ class Player extends PMPlayer{
 			$this->server->addOnlinePlayer($this);
 			
 			$this->dataPacket(new ResourcePacksInfoPacket());
-			if($this->spawnPosition === null and isset($this->namedtag->SpawnLevel) and ($level = $this->server->getLevelByName($this->namedtag["SpawnLevel"])) instanceof Level){
+			if(!isset($this->spawnPosition) and isset($this->namedtag->SpawnLevel) and ($level = $this->server->getLevelByName($this->namedtag["SpawnLevel"])) instanceof Level){
 				$this->spawnPosition = new Position($this->namedtag["SpawnX"], $this->namedtag["SpawnY"], $this->namedtag["SpawnZ"], $level);
 			}
 			$spawnPosition = $this->getSpawn();
@@ -194,7 +194,9 @@ class Player extends PMPlayer{
 			$pk->y = $this->y;
 			$pk->z = $this->z;
 			$pk->seed = -1;
-			$pk->dimension = $this->level->getDimension();
+			if(method_exists($this->level, "getDimension")){
+				$pk->dimension = $this->level->getDimension();
+			}
 			$pk->gamemode = $this->gamemode & 0x01;
 			$pk->difficulty = $this->server->getDifficulty();
 			$pk->spawnX = $spawnPosition->getFloorX();
@@ -211,12 +213,16 @@ class Player extends PMPlayer{
 			$this->dataPacket($pk);
 			
 			if (SynapsePM::isUseLoadingScreen()){
-				$pk = new ChangeDimensionPacket();
-				$pk->dimension = $this->getLevel()->getDimension();
-				$pk->x = $this->getX();
-				$pk->y = $this->getY();
-				$pk->z = $this->getZ();
-				$this->dataPacket($pk);
+				if(class_exists("ChangeDimensionPacket")){
+					$pk = new ChangeDimensionPacket();
+					$pk->dimension = $this->getLevel()->getDimension();
+					$pk->x = $this->getX();
+					$pk->y = $this->getY();
+					$pk->z = $this->getZ();
+					$this->dataPacket($pk);
+				} else {
+					$this->server->getLogger()->info(TextFormat::RED. "Your server software doesn't support the loading screen feature, please disable it in your config to prevent this message from appearing in the future");
+				}
 			}
 			
 			$pk = new SetTimePacket();
@@ -247,7 +253,7 @@ class Player extends PMPlayer{
 			}else{
 				$pk = new ContainerSetContentPacket();
 				$pk->windowid = ContainerSetContentPacket::SPECIAL_CREATIVE;
-				$pk->slots = array_merge(Item::getCreativeItems(), $this->personalCreativeItems);
+				$pk->slots = isset($this->personalCreativeItems) ? array_merge(Item::getCreativeItems(), $this->personalCreativeItems) : Item::getCreativeItems();
 				$this->dataPacket($pk);
 			}
 
@@ -281,12 +287,16 @@ class Player extends PMPlayer{
 			}
 			
 			if (SynapsePM::isUseLoadingScreen()){
-				$pk = new ChangeDimensionPacket();
-				$pk->dimension = $this->getLevel()->getDimension() === Level::DIMENSION_NORMAL ? ChangeDimensionPacket::DIMENSION_NETHER : ChangeDimensionPacket::DIMENSION_NORMAL;
-				$pk->x = $this->getX();
-				$pk->y = $this->getY();
-				$pk->z = $this->getZ();
-				$this->dataPacket($pk);
+				if(class_exists("ChangeDimensionPacket")){
+					$pk = new ChangeDimensionPacket();
+					$pk->dimension = $this->getLevel()->getDimension() === Level::DIMENSION_NORMAL ? ChangeDimensionPacket::DIMENSION_NETHER : ChangeDimensionPacket::DIMENSION_NORMAL;
+					$pk->x = $this->getX();
+					$pk->y = $this->getY();
+					$pk->z = $this->getZ();
+					$this->dataPacket($pk);
+				} else {
+					$this->server->getLogger()->info(TextFormat::RED. "Your server software doesn't support the loading screen feature, please disable it in your config to prevent this message from appearing in the future");
+				}
 				
 				$pk = new PlayStatusPacket();
 				$pk->status = PlayStatusPacket::PLAYER_SPAWN;
