@@ -90,7 +90,7 @@ class Player extends PMPlayer{
 				$this->close($this->getLeaveMessage(), "Server is white-listed");
 
 				return;
-			}elseif($this->server->getNameBans()->isBanned(strtolower($this->getName())) or $this->server->getIPBans()->isBanned($this->getAddress()) or $this->server->getName() != "PocketMine-MP" && $this->server->getCIDBans()->isBanned($this->randomClientId)){
+			}elseif($this->server->getNameBans()->isBanned(strtolower($this->getName())) or $this->server->getIPBans()->isBanned($this->getAddress()) or method_exists($this->server, "getCIDBans") && $this->server->getCIDBans()->isBanned($this->randomClientId)){
 				$this->close($this->getLeaveMessage(), TextFormat::RED . "You are banned");
 
 				return;
