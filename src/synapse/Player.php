@@ -263,7 +263,8 @@ class Player extends PMPlayer{
 			$this->dataPacket($pk);
 
 			$this->forceMovement = $this->teleportPosition = $this->getPosition();
-		}
+			$this->sendCommandData();		
+               }
 	}
 	
 	public function doFirstSpawn()
