@@ -60,6 +60,13 @@ class SynLibInterface implements SourceInterface{
 		$pk->mcpeBuffer = $packet->buffer;
 		$this->synapseInterface->putPacket($pk);
 	}
+	
+	public function putReadyPacket(Player $player, $buffer){
+		$pk->uuid = $player->getUniqueId();
+		$pk->direct = $immediate;
+		$pk->mcpeBuffer = $buffer;
+		$this->synapseInterface->putPacket($pk);
+	}
 
 	public function shutdown(){
 	}
