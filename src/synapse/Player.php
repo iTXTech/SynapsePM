@@ -82,7 +82,7 @@ class Player extends PMPlayer{
 		$this->handleDataPacket($pk);
 	}
 
-	protected function processLogin(){
+	public function processLogin(){
 		if($this->isFirstTimeLogin){
 			parent::processLogin();
 		}else{
