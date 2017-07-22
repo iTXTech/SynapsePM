@@ -18,18 +18,18 @@
  * @link https://itxtech.org
  *
  */
- 
+
 namespace synapse\event\player;
 
 use synapse\Player;
 
-class PlayerConnectEvent extends PlayerEvent{
-	public static $handlerList = null;
 
+class PlayerConnectEvent extends PlayerEvent {
+	public static $handlerList = null;
 	/** @var bool */
 	private $firstTime;
 
-	public function __construct(Player $player, bool $firstTime = true){
+	public function __construct(Player $player, bool $firstTime = true) {
 		$this->player = $player;
 		$this->firstTime = $firstTime;
 	}
@@ -39,7 +39,7 @@ class PlayerConnectEvent extends PlayerEvent{
 	 *
 	 * @return bool
 	 */
-	public function isFirstTime() : bool{
+	public function isFirstTime() : bool {
 		return $this->firstTime;
 	}
 }

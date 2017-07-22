@@ -24,23 +24,24 @@ namespace synapse\event\synapse;
 
 use synapse\Synapse;
 
-class SynapsePluginMsgRecvEvent extends SynapseEvent{
-    public static $handlerList = null;
 
-    /** @var string */
-    protected $message;
+class SynapsePluginMsgRecvEvent extends SynapseEvent {
+	public static $handlerList = null;
+	/** @var string */
+	protected $message;
 
-    /**
-     * SynapsePluginMsgRecvEvent constructor.
-     * @param Synapse $synapse
-     * @param string $message
-     */
-    public function __construct(Synapse $synapse, string $message){
-        $this->synapse = $synapse;
-        $this->message = $message;
-    }
+	/**
+	 * SynapsePluginMsgRecvEvent constructor.
+	 *
+	 * @param Synapse $synapse
+	 * @param string  $message
+	 */
+	public function __construct(Synapse $synapse, string $message) {
+		$this->synapse = $synapse;
+		$this->message = $message;
+	}
 
-    public function getMessage() : string{
-        return $this->message;
-    }
+	public function getMessage() : string {
+		return $this->message;
+	}
 }

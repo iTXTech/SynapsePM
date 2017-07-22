@@ -18,7 +18,7 @@
  * @link https://itxtech.org
  *
  */
- 
+
 namespace synapse\network;
 
 use synapse\network\protocol\spp\BroadcastPacket;
@@ -36,7 +36,8 @@ use synapse\network\protocol\spp\TransferPacket;
 use synapse\network\synlib\SynapseClient;
 use synapse\Synapse;
 
-class SynapseInterface{
+
+class SynapseInterface {
 	private $synapse;
 	private $ip;
 	private $port;
@@ -45,44 +46,45 @@ class SynapseInterface{
 	/** @var DataPacket[] */
 	private $packetPool = [];
 	private $connected = true;
-	
-	public function __construct(Synapse $server, string $ip, int $port){
+
+	public function __construct(Synapse $server, string $ip, int $port) {
 		$this->synapse = $server;
 		$this->ip = $ip;
 		$this->port = $port;
 		$this->registerPackets();
-		$this->client = new SynapseClient($server->getLogger(), $server->getGenisysServer()->getLoader(), $port, $ip);
+		$this->client = new SynapseClient($server->getLogger(), $server->getServer()->getLoader(), $port, $ip);
 	}
 
-	public function getSynapse(){
+	public function getSynapse() {
 		return $this->synapse;
 	}
 
-	public function reconnect(){
+	public function reconnect() {
 		$this->client->reconnect();
 	}
 
-	public function shutdown(){
+	public function shutdown() {
 		$this->client->shutdown();
 	}
 
-	public function putPacket(DataPacket $pk){
-		if(!$pk->isEncoded){
+	public function putPacket(DataPacket $pk) {
+		/*if(!$pk->isEncoded){
 			$pk->encode();
-		}
+		}*/
+		$pk->encode();
 		$this->client->pushMainToThreadPacket($pk->buffer);
 	}
 
-	public function isConnected() : bool{
+	public function isConnected() : bool {
 		return $this->connected;
 	}
 
-	public function process(){
-		while(strlen($buffer = $this->client->readThreadToMainPacket()) > 0){
+	public function process() {
+		while (strlen($buffer = $this->client->readThreadToMainPacket()) > 0) {
 			$this->handlePacket($buffer);
 		}
 		$this->connected = $this->client->isConnected();
-		if($this->client->isNeedAuth()){
+		if ($this->client->isNeedAuth()) {
 			$this->synapse->connect();
 			$this->client->setNeedAuth(false);
 		}
@@ -100,26 +102,27 @@ class SynapseInterface{
 		if ($class !== null) {
 			$pk = clone $class;
 			$pk->setBuffer($buffer, 1);
+
 			return $pk;
 		}
+
 		return null;
 	}
 
-	public function handlePacket($buffer){
-		if(($pk = $this->getPacket($buffer)) != null){
+	public function handlePacket($buffer) {
+		if (($pk = $this->getPacket($buffer)) != null) {
 			$pk->decode();
 			$this->synapse->handleDataPacket($pk);
 		}
 	}
 
 	/**
-	 * @param int        $id 0-255
-	 * @param DataPacket $class
+	 * @param int    $id 0-255
+	 * @param string $class
 	 */
 	public function registerPacket($id, $class) {
 		$this->packetPool[$id] = new $class;
 	}
-
 
 	private function registerPackets() {
 		$this->packetPool = new \SplFixedArray(256);

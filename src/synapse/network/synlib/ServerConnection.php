@@ -22,9 +22,10 @@
 namespace synapse\network\synlib;
 
 use pocketmine\utils\Binary;
+use synapse\network\protocol\spp\Info;
 
-class ServerConnection{
 
+class ServerConnection {
 	private $receiveBuffer = "";
 	/** @var resource */
 	private $socket;
@@ -35,7 +36,7 @@ class ServerConnection{
 	private $lastCheck;
 	private $connected;
 
-	public function __construct(SynapseClient $server, SynapseSocket $socket){
+	public function __construct(SynapseClient $server, SynapseSocket $socket) {
 		$this->server = $server;
 		$this->socket = $socket;
 		@socket_getpeername($this->socket->getSocket(), $address, $port);
@@ -48,16 +49,16 @@ class ServerConnection{
 		$this->run();
 	}
 
-	public function run(){
+	public function run() {
 		$this->tickProcessor();
 	}
 
-	private function tickProcessor(){
-		while(!$this->server->isShutdown()){
+	private function tickProcessor() {
+		while (!$this->server->isShutdown()) {
 			$start = microtime(true);
 			$this->tick();
 			$time = microtime(true);
-			if($time - $start < 0.01){
+			if ($time - $start < 0.01) {
 				@time_sleep_until($time + 0.01 - ($time - $start));
 			}
 		}
@@ -65,52 +66,54 @@ class ServerConnection{
 		$this->socket->close();
 	}
 
-	private function tick(){
+	private function tick() {
 		$this->update();
-		if(($data = $this->readPacket()) !== null){
-			foreach($data as $pk){
+		if (($data = $this->readPacket()) !== null) {
+			foreach ($data as $pk) {
 				$this->server->pushThreadToMainPacket($pk);
 			}
 		}
-		while(strlen($data = $this->server->readMainToThreadPacket()) > 0){
+		while (strlen($data = $this->server->readMainToThreadPacket()) > 0) {
 			$this->writePacket($data);
 		}
 	}
 
-	public function getHash(){
+	public function getHash() {
 		return $this->ip . ':' . $this->port;
 	}
 
-	public function getIp() : string{
+	public function getIp() : string {
 		return $this->ip;
 	}
 
-	public function getPort() : int{
+	public function getPort() : int {
 		return $this->port;
 	}
 
-	public function update(){
-		if($this->server->needReconnect and $this->connected){
+	public function update() {
+		if ($this->server->needReconnect and $this->connected) {
 			$this->connected = false;
 			$this->server->needReconnect = false;
 		}
-		if($this->connected){
+		if ($this->connected) {
 			$err = socket_last_error($this->socket->getSocket());
 			socket_clear_error($this->socket->getSocket());
-			if($err == 10057 or $err == 10054){
+			if ($err == 10057 or $err == 10054) {
 				$this->server->getLogger()->error("Synapse connection has disconnected unexpectedly");
 				$this->connected = false;
 				$this->server->setConnected(false);
-			}else{
+			}
+			else {
 				$data = @socket_read($this->socket->getSocket(), 65535, PHP_BINARY_READ);
-				if($data != ""){
+				if ($data != "") {
 					$this->receiveBuffer .= $data;
 				}
 			}
-		}else{
-			if((($time = microtime(true)) - $this->lastCheck) >= 3){//re-connect
+		}
+		else {
+			if ((($time = microtime(true)) - $this->lastCheck) >= 3) {//re-connect
 				$this->server->getLogger()->notice("Trying to re-connect to Synapse Server");
-				if($this->socket->connect()){
+				if ($this->socket->connect()) {
 					$this->connected = true;
 					@socket_getpeername($this->socket->getSocket(), $address, $port);
 					$this->ip = $address;
@@ -123,33 +126,42 @@ class ServerConnection{
 		}
 	}
 
-	public function getSocket(){
+	public function getSocket() {
 		return $this->socket;
 	}
 
-	public function readPacket(){
+	public function readPacket() {
 		$packets = [];
-		if($this->receiveBuffer !== "" && strlen($this->receiveBuffer) > 0){
-			$len = strlen($this->receiveBuffer);
+		if ($this->receiveBuffer !== "" && strlen($this->receiveBuffer) > 0) {
 			$offset = 0;
-			while($offset < $len){
-				if($offset > $len - 4) break;
-				$pkLen = Binary::readInt(substr($this->receiveBuffer, $offset, 4));
-				$offset +=  4;
+			$len = strlen($this->receiveBuffer);
+			while ($offset < $len) {
+				if ($offset > $len - 7) {
+					break;
+				}
+				$magic = Binary::readShort(substr($this->receiveBuffer, $offset, 2));
+				if ($magic !== Info::PROTOCOL_MAGIC) {
+					throw new \RuntimeException('Magic does not match.');
+				}
+				$pid = $this->receiveBuffer{$offset + 2};
+				$pkLen = Binary::readInt(substr($this->receiveBuffer, $offset + 3, 4));
+				$offset += 7;
 
-				if($pkLen <= ($len - $offset)) {
-					$buf = substr($this->receiveBuffer, $offset, $pkLen);
+				if ($pkLen <= ($len - $offset)) {
+					$buf = $pid . substr($this->receiveBuffer, $offset, $pkLen);
 					$offset += $pkLen;
 
 					$packets[] = $buf;
-				} else {
-					$offset -= 4;
+				}
+				else {
+					$offset -= 7;
 					break;
 				}
 			}
-			if($offset < $len){
+			if ($offset < $len) {
 				$this->receiveBuffer = substr($this->receiveBuffer, $offset);
-			}else{
+			}
+			else {
 				$this->receiveBuffer = "";
 			}
 		}
@@ -157,8 +169,10 @@ class ServerConnection{
 		return $packets;
 	}
 
-	public function writePacket($data){
-		@socket_write($this->socket->getSocket(), Binary::writeInt(strlen($data)) . $data);
+	public function writePacket($data) {
+		@socket_write($this->socket->getSocket(), Binary::writeShort(Info::PROTOCOL_MAGIC));
+		@socket_write($this->socket->getSocket(), $data{0});
+		@socket_write($this->socket->getSocket(), Binary::writeInt(strlen($data) - 1));
+		@socket_write($this->socket->getSocket(), substr($data, 1));
 	}
-
 }

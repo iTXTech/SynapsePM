@@ -18,20 +18,20 @@
  * @link https://itxtech.org
  *
  */
- 
+
 namespace synapse\network\protocol\spp;
 
 use pocketmine\utils\UUID;
 
-class RedirectPacket extends DataPacket{
-	const NETWORK_ID = Info::REDIRECT_PACKET;
 
+class RedirectPacket extends DataPacket {
+	const NETWORK_ID = Info::REDIRECT_PACKET;
 	/** @var UUID */
 	public $uuid;
 	public $direct;
 	public $mcpeBuffer;
 
-	public function encode(){
+	public function encode() {
 		$this->reset();
 		$this->putUUID($this->uuid);
 		$this->putByte($this->direct ? 1 : 0);
@@ -39,7 +39,7 @@ class RedirectPacket extends DataPacket{
 		$this->put($this->mcpeBuffer);
 	}
 
-	public function decode(){
+	public function decode() {
 		$this->uuid = $this->getUUID();
 		$this->direct = ($this->getByte() == 1) ? true : false;
 		$this->mcpeBuffer = $this->get($this->getUnsignedVarInt());

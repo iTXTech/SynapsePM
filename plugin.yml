@@ -1,5 +1,5 @@
 name: SynapsePM
 main: synapsepm\SynapsePM
 version: 1.0.3
-api: 2.0.0
+api: 3.0.0-ALPHA6
 load: STARTUP

@@ -23,11 +23,12 @@ namespace synapse\event\synapse;
 
 use synapse\event\Event;
 
-abstract class SynapseEvent extends Event{
-    /** @var \synapse\Synapse */
-    protected $synapse;
 
-    public function getSynapse(){
-        return $this->synapse;
-    }
+abstract class SynapseEvent extends Event {
+	/** @var \synapse\Synapse */
+	protected $synapse;
+
+	public function getSynapse() {
+		return $this->synapse;
+	}
 }

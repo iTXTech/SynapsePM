@@ -18,9 +18,8 @@
  * @link https://itxtech.org
  *
  */
- 
+
 namespace synapse\network;
 
-class Network{
-
+class Network {
 }

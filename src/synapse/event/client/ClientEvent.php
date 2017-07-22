@@ -18,10 +18,11 @@
  * @link https://itxtech.org
  *
  */
- 
+
 namespace synapse\event\client;
 
 use synapse\event\Event;
 
-abstract class ClientEvent extends Event{
+
+abstract class ClientEvent extends Event {
 }

@@ -21,9 +21,9 @@
 
 namespace synapse\network\protocol\spp;
 
-class Info{
-	const CURRENT_PROTOCOL = 7;
-
+class Info {
+	const CURRENT_PROTOCOL = 8;
+	const PROTOCOL_MAGIC = 0xbabe;
 	const HEARTBEAT_PACKET = 0x01;
 	const CONNECT_PACKET = 0x02;
 	const DISCONNECT_PACKET = 0x03;

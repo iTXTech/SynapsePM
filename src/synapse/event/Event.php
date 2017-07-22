@@ -18,11 +18,11 @@
  * @link https://itxtech.org
  *
  */
- 
+
 namespace synapse\event;
 
 use pocketmine\event\Event as PMEvent;
 
-abstract class Event extends PMEvent{
-	
+
+abstract class Event extends PMEvent {
 }
