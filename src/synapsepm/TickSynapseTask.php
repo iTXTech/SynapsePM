@@ -14,7 +14,13 @@ class TickSynapseTask extends PluginTask {
 		$owner = $this->getOwner();
 
 		foreach ($owner->getSynapses() as $synapse) {
-			$synapse->tick();
+			try {
+				$synapse->tick();
+			} catch (\Throwable $e) {
+				$owner->getLogger()->emergency('Failed to tick synapse:');
+				$owner->getLogger()->logException($e, $e->getTrace());
+				$owner->getLogger()->emergency($e->getTraceAsString());
+			}
 		}
 	}
 }

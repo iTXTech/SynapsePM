@@ -46,6 +46,7 @@ class SynapseSocket {
 		}
 		$this->logger->info("Synapse has connected to $this->interface:$this->port");
 		socket_set_nonblock($this->socket);
+		socket_set_option($this->socket, SOL_TCP, TCP_NODELAY, 1);
 
 		return true;
 	}

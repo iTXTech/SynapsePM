@@ -1,29 +1,11 @@
 <?php
-
-/*
- *
- *  _____   _____   __   _   _   _____  __    __  _____
- * /  ___| | ____| |  \ | | | | /  ___/ \ \  / / /  ___/
- * | |     | |__   |   \| | | | | |___   \ \/ /  | |___
- * | |  _  |  __|  | |\   | | | \___  \   \  /   \___  \
- * | |_| | | |___  | | \  | | |  ___| |   / /     ___| |
- * \_____/ |_____| |_|  \_| |_| /_____/  /_/     /_____/
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * @author iTX Technologies
- * @link https://itxtech.org
- *
- */
-
 namespace synapse;
 
 use pocketmine\event\player\PlayerCreationEvent;
 use pocketmine\Server;
+use pocketmine\utils\BinaryStream;
 use pocketmine\utils\MainLogger;
+use pocketmine\utils\Utils;
 use synapse\event\synapse\SynapsePluginMsgRecvEvent;
 use synapse\network\protocol\spp\BroadcastPacket;
 use synapse\network\protocol\spp\ConnectPacket;
@@ -125,7 +107,7 @@ class Synapse {
 
 	public function tick() {
 		$this->interface->process();
-		if ((($time = microtime(true)) - $this->lastUpdate) >= 5) {//Heartbeat!
+		if ((($time = microtime(true)) - $this->lastUpdate) >= 5) {
 			$this->lastUpdate = $time;
 			$pk = new HeartbeatPacket();
 			$pk->tps = $this->server->getTicksPerSecondAverage();
@@ -133,7 +115,7 @@ class Synapse {
 			$pk->upTime = microtime(true) - \pocketmine\START_TIME;
 			$this->sendDataPacket($pk);
 		}
-		if (((($time = microtime(true)) - $this->lastUpdate) >= 30) and $this->interface->isConnected()) {//30 seconds timeout
+		if (((($time = microtime(true)) - $this->lastUpdate) >= 30) and $this->interface->isConnected()) {
 			$this->interface->reconnect();
 		}
 		if (microtime(true) - $this->connectionTime >= 15 and !$this->verified) {
@@ -174,16 +156,13 @@ class Synapse {
 
 	public function getPacket($buffer) {
 		$pid = ord($buffer{0});
-		$start = 1;
-		if ($pid == 0xfe) {
-			$pid = ord($buffer{1});
-			$start++;
+		if ($pid === 0xFF) {
+			$pid = 0xFE;
 		}
 		if (($data = $this->getServer()->getNetwork()->getPacket($pid)) === null) {
 			return null;
 		}
-		$data->setBuffer($buffer, $start);
-
+		$data->setBuffer($buffer, 1);
 		return $data;
 	}
 
@@ -248,10 +227,9 @@ class Synapse {
 		case Info::REDIRECT_PACKET:
 			/** @var RedirectPacket $pk */
 			if (isset($this->players[$uuid = $pk->uuid->toBinary()])) {
-				$pk = $this->getPacket($pk->mcpeBuffer);
-				if ($pk != null) {//drop unknown packet
-					$pk->decode();
-					$this->players[$uuid]->handleDataPacket($pk);
+				$innerPacket = $this->getPacket($pk->mcpeBuffer);
+				if ($innerPacket !== null) {
+					$this->players[$uuid]->handleDataPacket($innerPacket);
 				}
 			}
 			break;
