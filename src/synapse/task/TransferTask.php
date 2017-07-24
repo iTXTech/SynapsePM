@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace synapse\task;
 
 use pocketmine\scheduler\Task;
@@ -17,7 +18,7 @@ class TransferTask extends Task {
 		$this->hash = $hash;
 	}
 
-	public function onRun($currentTick) {
+	public function onRun(int $currentTick) {
 		$pk = new TransferPacket();
 		$pk->uuid = $this->player->getUniqueId();
 		$pk->clientHash = $this->hash;

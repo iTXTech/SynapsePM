@@ -226,7 +226,7 @@ class SynapseClient extends Thread {
 		parent::isGarbage();
 	}
 
-	public function getThreadName() {
+	public function getThreadName() : string {
 		return "SynapseClient";
 	}
 }

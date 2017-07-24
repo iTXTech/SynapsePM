@@ -2,16 +2,11 @@
 namespace synapse;
 
 use pocketmine\event\server\DataPacketSendEvent;
-use pocketmine\nbt\tag\ByteTag;
-use pocketmine\nbt\tag\IntTag;
-use pocketmine\nbt\tag\LongTag;
-use pocketmine\nbt\tag\StringTag;
 use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\FullChunkDataPacket;
 use pocketmine\network\mcpe\protocol\PlayerListPacket;
 use pocketmine\network\mcpe\protocol\PlayStatusPacket;
-use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
-use pocketmine\network\mcpe\protocol\ResourcePacksInfoPacket;
+use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\Player as PMPlayer;
 use pocketmine\utils\UUID;
 use synapse\event\player\PlayerConnectEvent;
@@ -43,31 +38,42 @@ class Player extends PMPlayer {
 			$this->close($this->getLeaveMessage(), 'Invalid login packet');
 			return;
 		}
+
 		$this->handleDataPacket($loginPacket);
+		$this->uuid = $this->overrideUUID;
+		$this->rawUUID = $this->uuid->toBinary();
+
+		if (!$this->isFirstTimeLogin) {
+			$this->completeLoginSequence();
+			$this->doFirstSpawn();
+		}
 	}
 
 	protected function processLogin() {
-		/*if (!$this->isFirstTimeLogin || $this->slowLoginUntil === 0) {
-			parent::processLogin();
-
-			if ($this->isFirstTimeLogin && $this->slowLoginUntil === 0) {
-				$this->slowLoginUntil = microtime(true) + 0.05;
-				return;
-			}
-		}*/
-
 		parent::processLogin();
-
-		//parent::completeLoginSequence();
 	}
 
 	public function doFirstSpawn() {
-		if ($this->isFirstTimeLogin) {
+		parent::doFirstSpawn();
+
+		/*if ($this->isFirstTimeLogin) {
 			$pk = new PlayStatusPacket();
 			$pk->status = PlayStatusPacket::PLAYER_SPAWN;
 			$this->dataPacket($pk);
+		}*/
+	}
+
+	protected function completeLoginSequence() {
+		parent::completeLoginSequence();
+	}
+
+	public function handleText(TextPacket $packet) : bool {
+		foreach ($this->synapse->getClientData() as $hash => $data) {
+			if ($data['description'] === 'b') {
+				$this->synapseTransfer($hash);
+			}
 		}
-		parent::doFirstSpawn();
+		return parent::handleText($packet);
 	}
 
 	public function synapseTransfer(string $hash) {
@@ -109,7 +115,9 @@ class Player extends PMPlayer {
 
 			return false;
 		}
-
+		if ($this->uuid->toBinary() !== $this->rawUUID) {
+			$this->server->getLogger()->info('fuck uuid');
+		}
 		return parent::onUpdate($currentTick);
 	}
 
@@ -118,6 +126,7 @@ class Player extends PMPlayer {
 	}
 
 	public function setUniqueId(UUID $uuid) {
+		$this->uuid = $uuid;
 		$this->overrideUUID = $uuid;
 	}
 
@@ -137,34 +146,26 @@ class Player extends PMPlayer {
 
 			return true;
 		}
+		if ($packet instanceof PlayStatusPacket && $packet->status === PlayStatusPacket::PLAYER_SPAWN && !$this->isFirstTimeLogin) {
+			return true;
+		}
 
-		return false;
+		$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this, $packet));
+		return $ev->isCancelled();
 	}
 
 	public function dataPacket(DataPacket $packet, $needACK = false) {
-		if ($this->processPacket($packet)) {
-			return;
+		if (!$this->processPacket($packet)) {
+			return parent::dataPacket($packet, false);
 		}
-
-		$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this, $packet));
-		if ($ev->isCancelled()) {
-			return;
-		}
-
-		$this->interface->putPacket($this, $packet, $needACK, false);
+		return false;
 	}
 
 	public function directDataPacket(DataPacket $packet, $needACK = false) {
-		if ($this->processPacket($packet)) {
-			return;
+		if (!$this->processPacket($packet)) {
+			return parent::directDataPacket($packet, false);
 		}
-
-		$this->server->getPluginManager()->callEvent($ev = new DataPacketSendEvent($this, $packet));
-		if ($ev->isCancelled()) {
-			return;
-		}
-
-		$this->interface->putPacket($this, $packet, $needACK, true);
+		return false;
 	}
 
 	public function isFirstLogin() {

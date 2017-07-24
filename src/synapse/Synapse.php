@@ -2,6 +2,7 @@
 namespace synapse;
 
 use pocketmine\event\player\PlayerCreationEvent;
+use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\Server;
 use pocketmine\utils\BinaryStream;
 use pocketmine\utils\MainLogger;
@@ -56,6 +57,9 @@ class Synapse {
 		$this->synLibInterface = new SynLibInterface($this, $this->interface);
 		$this->lastUpdate = microtime(true);
 		$this->lastRecvInfo = microtime(true);
+
+		$this->description = getopt('', ['desc:'])['desc'];
+		$this->isMainServer = $this->description === 'a';
 		$this->connect();
 	}
 
@@ -159,7 +163,7 @@ class Synapse {
 		if ($pid === 0xFF) {
 			$pid = 0xFE;
 		}
-		if (($data = $this->getServer()->getNetwork()->getPacket($pid)) === null) {
+		if (($data = PacketPool::getPacketById($pid)) === null) {
 			return null;
 		}
 		$data->setBuffer($buffer, 1);
