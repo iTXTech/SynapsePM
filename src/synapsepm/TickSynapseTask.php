@@ -9,7 +9,7 @@ class TickSynapseTask extends PluginTask {
 		parent::__construct($owner);
 	}
 
-	public function onRun(int $currentTick) {
+	public function onRun($currentTick) {
 		/** @var SynapsePM $owner */
 		$owner = $this->getOwner();
 
