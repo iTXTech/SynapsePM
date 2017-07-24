@@ -57,8 +57,7 @@ class Synapse {
 		$this->synLibInterface = new SynLibInterface($this, $this->interface);
 		$this->lastUpdate = microtime(true);
 		$this->lastRecvInfo = microtime(true);
-
-		$this->description = getopt('', ['desc:'])['desc'];
+		$this->description = $config["description"];
 		$this->isMainServer = $this->description === 'a';
 		$this->connect();
 	}
