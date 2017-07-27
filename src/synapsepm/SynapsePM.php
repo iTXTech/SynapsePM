@@ -20,17 +20,11 @@ class SynapsePM extends PluginBase {
 
 		if (!$this->getConfig()->get('enabled')) {
 			$this->setEnabled(false);
-
 			return;
 		}
 
 		if ($this->getConfig()->get('disable-rak')) {
-			foreach ($this->getServer()->getNetwork()->getInterfaces() as $interface) {
-				if ($interface instanceof RakLibInterface) {
-					$interface->shutdown();
-					break;
-				}
-			}
+			$this->getServer()->getPluginManager()->registerEvents(new DisableRakListener(), $this);
 		}
 
 		foreach ($this->getConfig()->get('synapses') as $synapseConfig) {
