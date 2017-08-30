@@ -1,11 +1,10 @@
 enabled: true
 disable-rak: true
-synapses:
+synapses: []
 # - enabled: true
-#   server-ip: 127.0.0.1
-#   server-port: 10305
-#   is-main-server: true
-#   server-password: 32bitlongkey
+#   ip: 127.0.0.1
+#   port: 10305
 #   description: "A Synapse client"
-#   verbose-logging: false
+#   is-main: true
+#   password: 32bitlongkey
 loadingScreen: true
